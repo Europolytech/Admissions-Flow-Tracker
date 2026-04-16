@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EuroPolytech Admissions Flow Tracker</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #d9e1ec;
+      --text: #1e2a3a;
+      --muted: #5f6f82;
+      --primary: #234feb;
+      --accent: #edc000;
+      --success: #198754;
+      --danger: #c0392b;
+      --soft: #eef3ff;
+      --shadow: 0 10px 30px rgba(19, 35, 75, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f7f9fd 0%, #eef3fb 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(35,79,235,0.97), rgba(16,34,110,0.95));
+      color: white;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 3vw, 2.5rem);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 0;
+      color: rgba(255,255,255,0.9);
+      max-width: 780px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.11);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    .stat .label {
+      font-size: 0.84rem;
+      opacity: 0.84;
+      margin-bottom: 6px;
+    }
+
+    .stat .value {
+      font-size: 1.55rem;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card-head {
+      padding: 18px 20px 0;
+    }
+
+    .card-head h2, .card-head h3 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+    }
+
+    .card-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .card-body {
+      padding: 18px 20px 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cfd8e6;
+      border-radius: 12px;
+      padding: 12px 13px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea { min-height: 90px; resize: vertical; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button, .file-label {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover, .file-label:hover { transform: translateY(-1px); }
+
+    .primary { background: var(--primary); color: white; }
+    .secondary { background: #eef3ff; color: var(--primary); }
+    .accent { background: var(--accent); color: #2d2a12; }
+    .danger { background: #fce9e7; color: var(--danger); }
+    .ghost { background: white; color: var(--text); border: 1px solid var(--line); }
+
+    .file-label input { display: none; }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .filters input, .filters select { flex: 1; min-width: 180px; }
+
+    .app-list {
+      display: grid;
+      gap: 12px;
+      max-height: 840px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .app-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, #fff, #fbfcff);
+      cursor: pointer;
+      transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .app-card:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(35,79,235,0.08); }
+    .app-card.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(35,79,235,0.08); }
+
+    .app-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .app-name {
+      font-weight: 800;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    .app-meta {
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.79rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .b-blue { background: #eaf0ff; color: var(--primary); }
+    .b-gold { background: #fff8dd; color: #8a6c00; }
+    .b-green { background: #e8f7ef; color: var(--success); }
+    .b-red { background: #fdeceb; color: var(--danger); }
+
+    .progress-shell {
+      background: #edf2fb;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin: 10px 0 6px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      border-radius: inherit;
+    }
+
+    .small {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .stage-strip {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .stage-pill {
+      text-align: center;
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .stage-pill.current {
+      background: #eef3ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .stage-pill.done {
+      background: #edf8f1;
+      border-color: #bfe4cc;
+      color: var(--success);
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .check-item {
+      display: flex;
+      gap: 10px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .check-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+    }
+
+    .check-item strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 0.93rem;
+    }
+
+    .insight {
+      background: linear-gradient(180deg, #fffcf0, #fff);
+      border: 1px solid #f2e1a2;
+      border-radius: 16px;
+      padding: 14px;
+      color: #5f4c08;
+      margin-top: 16px;
+    }
+
+    .muted-box {
+      background: #f7f9fd;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .kpi {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .kpi .k {
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-bottom: 7px;
+    }
+
+    .kpi .v {
+      font-size: 1.45rem;
+      font-weight: 800;
+    }
+
+    .empty {
+      border: 1px dashed #c9d4e6;
+      border-radius: 16px;
+      padding: 28px 18px;
+      text-align: center;
+      color: var(--muted);
+      background: #fbfcff;
+    }
+
+    .pill-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 1100px) {
+      .hero, .toolbar, .detail-grid, .grid-3, .kpi-grid { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .stage-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 680px) {
+      .wrap { padding: 14px; }
+      .hero { padding: 18px; border-radius: 20px; }
+      .hero-stats { grid-template-columns: 1fr 1fr; }
+      .card-head, .card-body { padding-left: 16px; padding-right: 16px; }
+      .stage-strip { grid-template-columns: 1fr 1fr; }
+      .app-top { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <h1>EuroPolytech Admissions Flow Tracker</h1>
+        <p>A simple admissions control tool for managing student applications outside the CRM. It keeps every applicant tied to a stage, shows the next required action, and reduces missed steps through a guided checklist.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="label">Active applications</div>
+          <div class="value" id="statActive">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Due today / overdue</div>
+          <div class="value" id="statDue">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Completed</div>
+          <div class="value" id="statCompleted">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Payment pending</div>
+          <div class="value" id="statPending">0</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <section class="card">
+        <div class="card-head">
+          <h2>Add or update applicant</h2>
+          <p>Use this form as your external admissions checklist. Each record stores progress, next action, owner, and deadline in the browser.</p>
+        </div>
+        <div class="card-body">
+          <form id="appForm">
+            <input type="hidden" id="recordId" />
+            <div class="grid">
+              <div>
+                <label for="studentName">Student name</label>
+                <input id="studentName" required placeholder="e.g. Maria Silva" />
+              </div>
+              <div>
+                <label for="applicationType">Application route</label>
+                <select id="applicationType">
+                  <option>Student Application Form</option>
+                  <option>SkillCamp Application Form</option>
+                </select>
+              </div>
+              <div>
+                <label for="studentCategory">Student category</label>
+                <select id="studentCategory">
+                  <option>Domestic / Resident</option>
+                  <option>EU Student</option>
+                  <option>International Applicant</option>
+                  <option>Online / Distance Learner</option>
+                </select>
+              </div>
+              <div>
+                <label for="currentStage">Current stage</label>
+                <select id="currentStage"></select>
+              </div>
+              <div>
+                <label for="status">Operational status</label>
+                <select id="status"></select>
+              </div>
+              <div>
+                <label for="paymentStatus">Payment status</label>
+                <select id="paymentStatus">
+                  <option>Not Started</option>
+                  <option>Pending</option>
+                  <option>Paid</option>
+                  <option>Refunded</option>
+                </select>
+              </div>
+              <div>
+                <label for="actionOwner">Action owner</label>
+                <input id="actionOwner" placeholder="e.g. Admissions Officer" />
+              </div>
+              <div>
+                <label for="deadline">Action deadline</label>
+                <input id="deadline" type="date" />
+              </div>
+              <div>
+                <label for="visaOutcome">Visa outcome</label>
+                <select id="visaOutcome">
+                  <option>Not Applicable</option>
+                  <option>Not Yet Applied</option>
+                  <option>Awaiting Response</option>
+                  <option>Approved</option>
+                  <option>Refused</option>
+                </select>
+              </div>
+              <div>
+                <label for="invoiceNumber">Invoice number</label>
+                <input id="invoiceNumber" placeholder="e.g. INV-123456" />
+              </div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <label for="nextAction">Next required action</label>
+              <input id="nextAction" placeholder="e.g. Generate offer + programme letters" />
+            </div>
+
+            <div style="margin-top:12px;">
+              <label for="notes">Notes</label>
+              <textarea id="notes" placeholder="Eligibility notes, missing documents, special issues, follow-up comments..."></textarea>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="primary">Save applicant</button>
+              <button type="button" id="clearForm" class="ghost">Clear form</button>
+              <button type="button" id="exportData" class="secondary">Export data</button>
+              <label class="file-label accent">Import data
+                <input type="file" id="importData" accept="application/json" />
+              </label>
+              <button type="button" id="seedDemo" class="ghost">Load demo records</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Applicant queue</h2>
+          <p>Click a record to continue processing it. Filter by stage, deadline, or status to make daily follow-up easier.</p>
+        </div>
+        <div class="card-body">
+          <div class="filters">
+            <input id="searchInput" placeholder="Search by student, owner, action, invoice..." />
+            <select id="filterStage"></select>
+            <select id="filterStatus"></select>
+          </div>
+          <div id="appList" class="app-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="detail-grid">
+      <section class="card">
+        <div class="card-head">
+          <h3>Processing panel</h3>
+          <p>The selected applicant is shown here with stage progress and the exact next action to complete.</p>
+        </div>
+        <div class="card-body" id="detailPanel">
+          <div class="empty">Select an applicant from the queue to view the guided checklist.</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h3>Daily control view</h3>
+          <p>Use this block to focus on execution. It surfaces where operational leakage usually happens.</p>
+        </div>
+        <div class="card-body">
+          <div class="kpi-grid">
+            <div class="kpi"><div class="k">Need review</div><div class="v" id="kReview">0</div></div>
+            <div class="kpi"><div class="k">Need invoice</div><div class="v" id="kInvoice">0</div></div>
+            <div class="kpi"><div class="k">Need documents</div><div class="v" id="kDocs">0</div></div>
+            <div class="kpi"><div class="k">Need visa follow-up</div><div class="v" id="kVisa">0</div></div>
+          </div>
+
+          <div class="insight" id="insightBox">
+            No records yet. Start by adding one applicant and the tool will generate a stage-based view with the next action.
+          </div>
+
+          <div class="muted-box" style="margin-top:16px;">
+            <strong style="display:block; margin-bottom:8px;">Recommended daily method</strong>
+            <div class="small">1. Check records due today. 2. Move each applicant only after finishing the current stage. 3. Before closing the day, make sure every active record has a next action, owner, and deadline.</div>
+          </div>
+
+          <div class="footer-note">This tool stores data in the browser using local storage. For team use, export and import JSON regularly, or later connect it to a simple backend.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const STAGES = [
+      { id: 1, name: 'Application', progress: 14, checks: [
+        ['Application visible in system', 'Confirm the applicant has landed correctly in CRM and source form.'],
+        ['Fields complete', 'Verify key fields are complete and readable.'],
+        ['Documents checked', 'Confirm files are uploaded and usable.'],
+        ['Cross-check source data', 'Compare Zoho Form details with CRM record.']
+      ]},
+      { id: 2, name: 'Review', progress: 28, checks: [
+        ['Status under review', 'Move record into review once completeness has been verified.'],
+        ['Portal invitation confirmed', 'Ensure the portal invitation tick or equivalent action is present.'],
+        ['Eligibility assessment drafted', 'Admissions officer reviews academic fit.'],
+        ['Notes added', 'Store the eligibility assessment in notes.']
+      ]},
+      { id: 3, name: 'Eligible', progress: 42, checks: [
+        ['Eligibility confirmed', 'Record status as Eligible - Conditional.'],
+        ['Eligibility email checked', 'Confirm the student has been notified.'],
+        ['Invoice required', 'Prepare to issue tuition fee invoice.']
+      ]},
+      { id: 4, name: 'Invoice', progress: 57, checks: [
+        ['Invoice created', 'Generate the invoice in Zoho Billing or equivalent billing system.'],
+        ['Invoice sent', 'Make sure the applicant received it.'],
+        ['Invoice number recorded', 'Paste invoice reference into the student record.'],
+        ['Billed amount recorded', 'Store billed amount and upload a copy if required.']
+      ]},
+      { id: 5, name: 'Paid', progress: 71, checks: [
+        ['Payment cleared', 'Confirm the funds have been received.'],
+        ['Fees Paid status applied', 'Move the applicant to the paid stage.'],
+        ['Document generation due', 'Prepare post-payment admission letters where applicable.']
+      ]},
+      { id: 6, name: 'Visa', progress: 85, checks: [
+        ['15-day follow-up completed', 'Check whether the applicant has submitted a visa application.'],
+        ['Visa outcome updated', 'Mark awaiting response, approved, or refused.'],
+        ['Visa copy received', 'If approved, collect and attach the visa evidence.']
+      ]},
+      { id: 7, name: 'Completed', progress: 100, checks: [
+        ['All required steps completed', 'Final verification that the student file is complete.'],
+        ['Final status updated', 'Mark the application as completed.']
+      ]}
+    ];
+
+    const STATUS_OPTIONS = [
+      'Application Submitted',
+      'Under Review',
+      'Eligible - Conditional',
+      'Invoice Issued - Awaiting Payment',
+      'Fees Paid',
+      'Awaiting Visa Response',
+      'Completed'
+    ];
+
+    const stageSelect = document.getElementById('currentStage');
+    const statusSelect = document.getElementById('status');
+    const filterStage = document.getElementById('filterStage');
+    const filterStatus = document.getElementById('filterStatus');
+    const appList = document.getElementById('appList');
+    const detailPanel = document.getElementById('detailPanel');
+    const appForm = document.getElementById('appForm');
+    const searchInput = document.getElementById('searchInput');
+    const insightBox = document.getElementById('insightBox');
+
+    const STORAGE_KEY = 'europolytechAdmissionsTrackerV1';
+    let records = loadRecords();
+    let selectedId = null;
+
+    function populateSelects() {
+      STAGES.forEach(stage => {
+        const opt = new Option(stage.name, stage.id);
+        stageSelect.add(opt.cloneNode(true));
+      });
+
+      STATUS_OPTIONS.forEach(status => {
+        const opt = new Option(status, status);
+        statusSelect.add(opt.cloneNode(true));
+      });
+
+      filterStage.innerHTML = '<option value="">All stages</option>' + STAGES.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      filterStatus.innerHTML = '<option value="">All statuses</option>' + STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function loadRecords() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function todayISO() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function inferStatus(stageId) {
+      const map = {
+        1: 'Application Submitted',
+        2: 'Under Review',
+        3: 'Eligible - Conditional',
+        4: 'Invoice Issued - Awaiting Payment',
+        5: 'Fees Paid',
+        6: 'Awaiting Visa Response',
+        7: 'Completed'
+      };
+      return map[stageId] || 'Application Submitted';
+    }
+
+    function inferNextAction(stageId, category='') {
+      const intl = category === 'International Applicant';
+      const map = {
+        1: 'Verify application data and supporting documents',
+        2: 'Complete eligibility assessment and record notes',
+        3: 'Issue tuition fee invoice',
+        4: 'Monitor payment and update billing fields',
+        5: intl ? 'Generate offer and programme documents' : 'Confirm enrolment completion requirements',
+        6: 'Follow up on visa application outcome',
+        7: 'No further action'
+      };
+      return map[stageId] || 'Review record';
+    }
+
+    function getStage(stageId) {
+      return STAGES.find(s => s.id === Number(stageId)) || STAGES[0];
+    }
+
+    function getBadgeClass(stageId) {
+      if (stageId === 7) return 'b-green';
+      if (stageId >= 5) return 'b-gold';
+      return 'b-blue';
+    }
+
+    function isDue(dateStr) {
+      return dateStr && dateStr <= todayISO();
+    }
+
+    function filteredRecords() {
+      const q = searchInput.value.trim().toLowerCase();
+      const stage = filterStage.value;
+      const status = filterStatus.value;
+      return [...records]
+        .filter(r => !stage || String(r.currentStage) === stage)
+        .filter(r => !status || r.status === status)
+        .filter(r => {
+          if (!q) return true;
+          return [r.studentName, r.applicationType, r.studentCategory, r.actionOwner, r.nextAction, r.invoiceNumber, r.notes, r.status]
+            .join(' ')
+            .toLowerCase()
+            .includes(q);
+        })
+        .sort((a, b) => {
+          const aDue = a.deadline || '9999-12-31';
+          const bDue = b.deadline || '9999-12-31';
+          if (aDue !== bDue) return aDue.localeCompare(bDue);
+          return a.studentName.localeCompare(b.studentName);
+        });
+    }
+
+    function renderList() {
+      const list = filteredRecords();
+      if (!list.length) {
+        appList.innerHTML = '<div class="empty">No applicants match the current filters.</div>';
+        return;
+      }
+      appList.innerHTML = list.map(record => {
+        const stage = getStage(record.currentStage);
+        const dueFlag = isDue(record.deadline) && stage.id !== 7;
+        return `
+          <div class="app-card ${record.id === selectedId ? 'active' : ''}" data-id="${record.id}">
+            <div class="app-top">
+              <div>
+                <div class="app-name">${escapeHtml(record.studentName)}</div>
+                <div class="app-meta">${escapeHtml(record.studentCategory)} · ${escapeHtml(record.applicationType)}</div>
+              </div>
+              <div class="badge ${dueFlag ? 'b-red' : getBadgeClass(stage.id)}">${dueFlag ? 'Due / overdue' : escapeHtml(stage.name)}</div>
+            </div>
+            <div class="small"><strong>Next:</strong> ${escapeHtml(record.nextAction || 'Not set')}</div>
+            <div class="progress-shell"><div class="progress-bar" style="width:${stage.progress}%"></div></div>
+            <div class="small">Owner: ${escapeHtml(record.actionOwner || 'Unassigned')} · Deadline: ${escapeHtml(record.deadline || 'Not set')}</div>
+          </div>
+        `;
+      }).join('');
+
+      appList.querySelectorAll('.app-card').forEach(card => {
+        card.addEventListener('click', () => {
+          selectedId = Number(card.dataset.id);
+          renderAll();
+        });
+      });
+    }
+
+    function renderDetail() {
+      const record = records.find(r => r.id === selectedId);
+      if (!record) {
+        detailPanel.innerHTML = '<div class="empty">Select an applicant from the queue to view the guided checklist.</div>';
+        return;
+      }
+      const stage = getStage(record.currentStage);
+      const stageStrip = STAGES.map(s => {
+        const cls = s.id === stage.id ? 'current' : s.id < stage.id ? 'done' : '';
+        return `<div class="stage-pill ${cls}">${s.name}</div>`;
+      }).join('');
+
+      detailPanel.innerHTML = `
+        <div>
+          <div class="app-top" style="margin-bottom:14px;">
+            <div>
+              <div class="app-name" style="font-size:1.2rem;">${escapeHtml(record.studentName)}</div>
+              <div class="app-meta">${escapeHtml(record.status)} · ${escapeHtml(record.studentCategory)} · Owner: ${escapeHtml(record.actionOwner || 'Unassigned')}</div>
+            </div>
+            <div class="badge ${getBadgeClass(stage.id)}">${escapeHtml(stage.name)}</div>
+          </div>
+
+          <div class="small"><strong>Next required action:</strong> ${escapeHtml(record.nextAction || 'Not set')}</div>
+          <div class="small" style="margin-top:6px;"><strong>Deadline:</strong> ${escapeHtml(record.deadline || 'Not set')} · <strong>Payment:</strong> ${escapeHtml(record.paymentStatus)} · <strong>Visa:</strong> ${escapeHtml(record.visaOutcome)}</div>
+
+          <div class="stage-strip">${stageStrip}</div>
+
+          <div class="checklist">
+            ${stage.checks.map(([title, desc]) => `
+              <label class="check-item">
+                <input type="checkbox" />
+                <div>
+                  <strong>${escapeHtml(title)}</strong>
+                  <div class="small">${escapeHtml(desc)}</div>
+                </div>
+              </label>
+            `).join('')}
+          </div>
+
+          <div class="pill-line">
+            <button class="secondary" id="movePrev" ${stage.id === 1 ? 'disabled' : ''}>Move back</button>
+            <button class="primary" id="moveNext" ${stage.id === 7 ? 'disabled' : ''}>Advance to next stage</button>
+            <button class="accent" id="editSelected">Load into form</button>
+            <button class="danger" id="deleteSelected">Delete record</button>
+          </div>
+
+          <div class="insight">
+            <strong>Control question:</strong> Before leaving this record, the admissions user should be able to answer three things instantly: current stage, next required action, and owner. If any of these is unclear, the file is operationally at risk.
+          </div>
+
+          <div class="muted-box" style="margin-top:16px;">
+            <strong style="display:block; margin-bottom:6px;">Notes</strong>
+            <div class="small">${escapeHtml(record.notes || 'No notes recorded.')}</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('movePrev')?.addEventListener('click', () => shiftStage(record.id, -1));
+      document.getElementById('moveNext')?.addEventListener('click', () => shiftStage(record.id, 1));
+      document.getElementById('editSelected')?.addEventListener('click', () => loadIntoForm(record));
+      document.getElementById('deleteSelected')?.addEventListener('click', () => deleteRecord(record.id));
+    }
+
+    function shiftStage(id, direction) {
+      const record = records.find(r => r.id === id);
+      if (!record) return;
+      const newStage = Math.min(7, Math.max(1, Number(record.currentStage) + direction));
+      record.currentStage = newStage;
+      record.status = inferStatus(newStage);
+      record.nextAction = inferNextAction(newStage, record.studentCategory);
+      if (newStage === 7) {
+        record.deadline = '';
+        record.paymentStatus = record.paymentStatus === 'Not Started' ? 'Paid' : record.paymentStatus;
+      } else if (!record.deadline) {
+        const d = new Date();
+        d.setDate(d.getDate() + 2);
+        record.deadline = d.toISOString().slice(0, 10);
+      }
+      saveRecords();
+      renderAll();
+    }
+
+    function loadIntoForm(record) {
+      document.getElementById('recordId').value = record.id;
+      document.getElementById('studentName').value = record.studentName;
+      document.getElementById('applicationType').value = record.applicationType;
+      document.getElementById('studentCategory').value = record.studentCategory;
+      document.getElementById('currentStage').value = record.currentStage;
+      document.getElementById('status').value = record.status;
+      document.getElementById('paymentStatus').value = record.paymentStatus;
+      document.getElementById('actionOwner').value = record.actionOwner || '';
+      document.getElementById('deadline').value = record.deadline || '';
+      document.getElementById('visaOutcome').value = record.visaOutcome;
+      document.getElementById('invoiceNumber').value = record.invoiceNumber || '';
+      document.getElementById('nextAction').value = record.nextAction || '';
+      document.getElementById('notes').value = record.notes || '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteRecord(id) {
+      if (!confirm('Delete this applicant record?')) return;
+      records = records.filter(r => r.id !== id);
+      if (selectedId === id) selectedId = records[0]?.id || null;
+      saveRecords();
+      renderAll();
+    }
+
+    function renderKPIs() {
+      const active = records.filter(r => Number(r.currentStage) < 7).length;
+      const due = records.filter(r => Number(r.currentStage) < 7 && isDue(r.deadline)).length;
+      const completed = records.filter(r => Number(r.currentStage) === 7).length;
+      const pending = records.filter(r => r.paymentStatus === 'Pending').length;
+      document.getElementById('statActive').textContent = active;
+      document.getElementById('statDue').textContent = due;
+      document.getElementById('statCompleted').textContent = completed;
+      document.getElementById('statPending').textContent = pending;
+
+      document.getElementById('kReview').textContent = records.filter(r => Number(r.currentStage) === 2).length;
+      document.getElementById('kInvoice').textContent = records.filter(r => Number(r.currentStage) === 4).length;
+      document.getElementById('kDocs').textContent = records.filter(r => Number(r.currentStage) === 5 && r.studentCategory === 'International Applicant').length;
+      document.getElementById('kVisa').textContent = records.filter(r => Number(r.currentStage) === 6).length;
+
+      if (!records.length) {
+        insightBox.textContent = 'No records yet. Start by adding one applicant and the tool will generate a stage-based view with the next action.';
+        return;
+      }
+
+      const overdue = records.filter(r => Number(r.currentStage) < 7 && isDue(r.deadline));
+      if (overdue.length) {
+        const first = overdue[0];
+        insightBox.innerHTML = `<strong>Attention:</strong> ${escapeHtml(first.studentName)} is due for follow-up. Current action: ${escapeHtml(first.nextAction || 'Not set')}. This is the kind of file most likely to be missed without a daily control habit.`;
+      } else {
+        const waiting = records.find(r => Number(r.currentStage) === 4 || Number(r.currentStage) === 6) || records[0];
+        insightBox.innerHTML = `<strong>Operational view:</strong> ${escapeHtml(waiting.studentName)} is currently at <strong>${escapeHtml(getStage(waiting.currentStage).name)}</strong>. The system’s value is not storage; it is making the next required action visible at a glance.`;
+      }
+    }
+
+    function renderAll() {
+      if (!records.length) selectedId = null;
+      if (!selectedId && records.length) selectedId = records[0].id;
+      renderList();
+      renderDetail();
+      renderKPIs();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    appForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const idValue = document.getElementById('recordId').value;
+      const currentStage = Number(document.getElementById('currentStage').value);
+      const record = {
+        id: idValue ? Number(idValue) : Date.now(),
+        studentName: document.getElementById('studentName').value.trim(),
+        applicationType: document.getElementById('applicationType').value,
+        studentCategory: document.getElementById('studentCategory').value,
+        currentStage,
+        status: document.getElementById('status').value || inferStatus(currentStage),
+        paymentStatus: document.getElementById('paymentStatus').value,
+        actionOwner: document.getElementById('actionOwner').value.trim(),
+        deadline: document.getElementById('deadline').value,
+        visaOutcome: document.getElementById('visaOutcome').value,
+        invoiceNumber: document.getElementById('invoiceNumber').value.trim(),
+        nextAction: document.getElementById('nextAction').value.trim() || inferNextAction(currentStage, document.getElementById('studentCategory').value),
+        notes: document.getElementById('notes').value.trim()
+      };
+
+      const index = records.findIndex(r => r.id === record.id);
+      if (index >= 0) records[index] = record;
+      else records.unshift(record);
+      selectedId = record.id;
+      saveRecords();
+      renderAll();
+      appForm.reset();
+      document.getElementById('recordId').value = '';
+      stageSelect.value = '1';
+      statusSelect.value = inferStatus(1);
+      document.getElementById('visaOutcome').value = 'Not Applicable';
+      document.getElementById('paymentStatus').value = 'Not Started';
+    });
+
+    document.getElementById('clearForm').addEventListener('click', () => {
+      appForm.reset();
+      document.getElementById('recordId').value = '';
+      stageSelect.value = '1';
+      statusSelect.value = inferStatus(1);
+      document.getElementById('nextAction').value = inferNextAction(1);
+      document.getElementById('paymentStatus').value = 'Not Started';
+      document.getElementById('visaOutcome').value = 'Not Applicable';
+    });
+
+    stageSelect.addEventListener('change', () => {
+      const stage = Number(stageSelect.value);
+      statusSelect.value = inferStatus(stage);
+      const cat = document.getElementById('studentCategory').value;
+      document.getElementById('nextAction').value = inferNextAction(stage, cat);
+    });
+
+    document.getElementById('studentCategory').addEventListener('change', () => {
+      const stage = Number(stageSelect.value);
+      document.getElementById('nextAction').value = inferNextAction(stage, document.getElementById('studentCategory').value);
+      const visa = document.getElementById('studentCategory').value === 'International Applicant' ? 'Not Yet Applied' : 'Not Applicable';
+      document.getElementById('visaOutcome').value = visa;
+    });
+
+    searchInput.addEventListener('input', renderList);
+    filterStage.addEventListener('change', renderList);
+    filterStatus.addEventListener('change', renderList);
+
+    document.getElementById('exportData').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'europolytech-admissions-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importData').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!Array.isArray(parsed)) throw new Error('Invalid file');
+        records = parsed;
+        selectedId = records[0]?.id || null;
+        saveRecords();
+        renderAll();
+      } catch {
+        alert('Could not import file. Please use a valid exported JSON file.');
+      }
+      e.target.value = '';
+    });
+
+    document.getElementById('seedDemo').addEventListener('click', () => {
+      if (records.length && !confirm('Load demo records and replace current local data?')) return;
+      records = [
+        {
+          id: 101,
+          studentName: 'Sara Benali',
+          applicationType: 'SkillCamp Application Form',
+          studentCategory: 'International Applicant',
+          currentStage: 6,
+          status: 'Awaiting Visa Response',
+          paymentStatus: 'Paid',
+          actionOwner: 'Admissions Team',
+          deadline: todayISO(),
+          visaOutcome: 'Awaiting Response',
+          invoiceNumber: 'INV-120983',
+          nextAction: 'Follow up on visa application outcome',
+          notes: 'Offer and programme letters already uploaded. Awaiting visa decision.'
+        },
+        {
+          id: 102,
+          studentName: 'João Pereira',
+          applicationType: 'Student Application Form',
+          studentCategory: 'Domestic / Resident',
+          currentStage: 2,
+          status: 'Under Review',
+          paymentStatus: 'Not Started',
+          actionOwner: 'Maria',
+          deadline: todayISO(),
+          visaOutcome: 'Not Applicable',
+          invoiceNumber: '',
+          nextAction: 'Complete eligibility assessment and record notes',
+          notes: 'Waiting for final academic check.'
+        },
+        {
+          id: 103,
+          studentName: 'Lina Haddad',
+          applicationType: 'Student Application Form',
+          studentCategory: 'EU Student',
+          currentStage: 4,
+          status: 'Invoice Issued - Awaiting Payment',
+          paymentStatus: 'Pending',
+          actionOwner: 'Admissions Team',
+          deadline: todayISO(),
+          visaOutcome: 'Not Applicable',
+          invoiceNumber: 'INV-120991',
+          nextAction: 'Monitor payment and update billing fields',
+          notes: 'Invoice issued yesterday. Payment reminder due.'
+        }
+      ];
+      selectedId = 101;
+      saveRecords();
+      renderAll();
+    });
+
+    populateSelects();
+    stageSelect.value = '1';
+    statusSelect.value = inferStatus(1);
+    document.getElementById('nextAction').value = inferNextAction(1);
+    renderAll();
+  </script>
+</body>
+</html>
